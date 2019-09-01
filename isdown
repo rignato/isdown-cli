@@ -1,15 +1,24 @@
 #!/usr/bin/python3
 
+'''
+    Small script that queries www.isitdownrightnow.com
+    to get the status of a given site.
+'''
+
 from selectolax.parser import HTMLParser
 import requests, sys, json, time
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
+# Set up headless browser
 OPTIONS = Options()
 OPTIONS.headless = True
 HOST = 'www.isitdownrightnow.com'
 
 def displayHelp():
+    '''
+        Displays a help page with information about the script.
+    '''
     helpStr = "Usage: isdown [SITE] [OPTION]\n\n" \
               "Queries isitdownrightnow.com to get status of SITE.\n\n" \
               "Options:\n" \
@@ -23,20 +32,27 @@ if __name__ == '__main__':
     else:
         domain = sys.argv[1]
         site = "https://%s/%s.html" % (HOST, domain)
+        
+        # Check if site entered is valid
         if requests.get(site).status_code != 404:
             print("Checking site status...\n")
 
+            # Check verbosity
             verbose = False
             if '--verbose' in sys.argv or '-v' in sys.argv:
                 verbose = True
 
+            # Setup driver (Firefox)
             driver = webdriver.Firefox(options=OPTIONS)
             driver.get(site)
+            
+            # Wait until JS finishes loading result in site
             while 'Please wait while we check the server' in driver.page_source:
                 time.sleep(0.5)
             html = driver.page_source
             driver.quit()
 
+            # Print results to console
             try:
                 server_data = HTMLParser(html).css(".serverdata")[0]
                 arr = [x.text(separator='@@').split('@@') for x in server_data.iter()]
