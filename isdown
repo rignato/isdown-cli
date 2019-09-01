@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+
+from selectolax.parser import HTMLParser
+import requests, sys, json, time
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+
+OPTIONS = Options()
+OPTIONS.headless = True
+DRIVER = webdriver.Firefox(options=OPTIONS)
+HOST = 'www.isitdownrightnow.com'
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        verbose = False
+        if '--verbose' in sys.argv or '-v' in sys.argv:
+            verbose = True
+
+        domain = sys.argv[1]
+        site = "http://%s/%s.html" % (HOST, domain)
+        DRIVER.get(site)
+        while 'Please wait' in DRIVER.page_source:
+            time.sleep(0.5)
+        html = DRIVER.page_source
+        try:
+            server_data = HTMLParser(html).css(".serverdata")[0]
+            print("Checking down status for %s...\n" % domain)
+        except IndexError:
+            print("Error (Invalid site): %s" % domain)
+            exit()
+        arr = [x.text(separator='@@').split('@@') for x in server_data.iter()]
+        arr = [[x[1], x[0]] for x in arr]
+        status = arr[4][1]
+        if verbose:
+            response_json = {'Status': status}
+            for pair in arr[1:4]:
+                response_json[pair[0][:-1]] = pair[1]
+            for field in response_json:
+                print("%-14s:\t%s" % (field, response_json[field]))
+        else:
+            print(status)
+
+DRIVER.quit()
