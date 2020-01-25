@@ -1,5 +1,5 @@
 # isdown-cli
-CLI script that queries isitdownrightnow.com to get domain status
+CLI script that queries isitdownrightnow.com to get site status
 
 ## Dependencies
 ``` 
